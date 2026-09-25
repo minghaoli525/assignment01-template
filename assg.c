@@ -25,7 +25,7 @@ char schedule_path[256]; /*create a set which size is 256 */
         /*printf("%s",schedule_path);*/
     FILE*sched_file = fopen(schedule_path,"r");
     if(sched_file ==NULL){
-        perror("Could not open schedule file%s\n");
+        perror("Could not open schedule file");
         continue;
     }
 char file_header[256];
