@@ -31,7 +31,7 @@ char schedule_path[256]; /*create a set which size is 256 */
 char file_header[256];
     if(fgets(file_header,sizeof(file_header),sched_file) != NULL){
         file_header[strcspn(file_header,"\r\n")] = '\0';
-        printf("path -> the first line", schedule_path,file_header);
+        printf("path:%s -> the first line:%s\n", schedule_path,file_header);
     }
     fclose(sched_file);
     }
