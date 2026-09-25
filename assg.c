@@ -22,8 +22,18 @@ char schedule_path[256]; /*create a set which size is 256 */
     while (fgets(schedule_path, sizeof(schedule_path), list_file) != NULL) {
         schedule_path[strcspn(schedule_path, "\r\n")] = '\0';
         if (strlen(schedule_path) == 0) continue;
-        printf("%s",schedule_path);
-
+        /*printf("%s",schedule_path);*/
+    FILE*sched_file = fopen(schedule_path,"r");
+    if(sched_file ==NULL){
+        perror("Could not open schedule file%s\n");
+        continue;
+    }
+char file_header[256];
+    if(fgets(file_header,sizeof(file_header),sched_file) != NULL){
+        file_header[strcspn(file_header,"\r\n")] = '\0';
+        printf("path -> the first line", schedule_path,file_header);
+    }
+    fclose(sched_file);
     }
     fclose(list_file);
     return 0;
