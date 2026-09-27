@@ -1,10 +1,6 @@
-/*Milestone 就是让你写一个简易版的 C 程序，读入一个路线列表文件，
-把各个时刻表文件的基本信息读出来并按格式打印在屏幕上，
-然后推送到 Git 的 milestone-submission 分支并填表。*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 int main(int argc, char*argv[]){
 
@@ -30,7 +26,7 @@ rewind(list_file);
 printf("Processing %d schedule files\n",total_files);
 int index = 1;
 
-char schedule_path[256]; /*create a set which size is 256 */
+char schedule_path[256]; 
     while (fgets(schedule_path, sizeof(schedule_path), list_file) != NULL) {
         schedule_path[strcspn(schedule_path, "\r\n")] = '\0';
         char direction = '\0';
@@ -39,7 +35,6 @@ char schedule_path[256]; /*create a set which size is 256 */
             direction = *(last_underscore +1);
         }
         if (strlen(schedule_path) == 0) continue;
-        /*printf("%s",schedule_path);*/
     FILE*sched_file = fopen(schedule_path,"r");
     if(sched_file ==NULL){
         perror("Could not open schedule file");
