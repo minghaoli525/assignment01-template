@@ -26,17 +26,27 @@ int main(int argc, char *argv[]) {
         schedule_path[strcspn(schedule_path, "\r\n")] = '\0';
         if (strlen(schedule_path) == 0) continue;
 
-        char direction = *(strrchr(schedule_path, '_') + 1);
+        char route[32];
+        char *r_start = strstr(schedule_path, "route_") + 6;
+        char *r_end = strchr(r_start, '_');               
+        int r_len = r_end - r_start;
+        strncpy(route, r_start, r_len);
+        route[r_len] = '\0';
+
+        char direction = *(r_end + 1);
 
         FILE *sched_file = fopen(schedule_path, "r");
         if (!sched_file) continue;
 
         char file_header[256];
         if (fgets(file_header, sizeof(file_header), sched_file) != NULL) {
-            char route[32];   
             int num_stops = 0;
 
-            sscanf(file_header, "%s %*[^,], %d", route, &num_stops);
+            char *comma = strchr(file_header, ',');
+            if (comma) {
+                num_stops = atoi(comma + 1);
+            }
+
             printf("schedule #%d is route %s it has %d stops and is in the %c direction\n",
                    index, route, num_stops, direction);
         }
