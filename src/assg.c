@@ -22,39 +22,102 @@ int main(int argc, char *argv[]) {
     int index = 1;
     char schedule_path[256];
 
-    while (fgets(schedule_path, sizeof(schedule_path), list_file) != NULL) {
-        schedule_path[strcspn(schedule_path, "\r\n")] = '\0';
-        if (strlen(schedule_path) == 0) continue;
+while (fgets(schedule_path, sizeof(schedule_path), list_file) != NULL) {
 
-        char route[32];
-        char *r_start = strstr(schedule_path, "route_") + 6;
-        char *r_end = strchr(r_start, '_');               
-        int r_len = r_end - r_start;
-        strncpy(route, r_start, r_len);
-        route[r_len] = '\0';
+       int i = 0;
 
-        char direction = *(r_end + 1);
+        while (schedule_path[i] != '\0') {
 
-        FILE *sched_file = fopen(schedule_path, "r");
-        if (!sched_file) continue;
+            if (schedule_path[i] == '\n' ||
+                schedule_path[i] == '\r') {
 
-        char file_header[256];
-        if (fgets(file_header, sizeof(file_header), sched_file) != NULL) {
-            int num_stops = 0;
-
-            char *comma = strchr(file_header, ',');
-            if (comma) {
-                num_stops = atoi(comma + 1);
+                schedule_path[i] = '\0';
+                break;
             }
 
-            printf("schedule #%d is route %s it has %d stops and is in the %c direction\n",
-                   index, route, num_stops, direction);
+            i++;
+        }
+
+        if (schedule_path[0] == '\0') {
+            continue;
+        }
+
+
+int start = 0;
+        i = 0;
+
+        while (schedule_path[i] != '\0') {
+
+            if (schedule_path[i] == '/') {
+                start = i + 1;
+            }
+
+            i++;
+        }
+
+        /* 文件名格式：route_101_EB.txt */
+        i = start + 6;
+
+        char route[32];
+        int j = 0;
+
+        /* 复制路线编号 */
+        while (schedule_path[i] != '_' &&
+               schedule_path[i] != '\0' &&
+               j < 31) {
+
+            route[j] = schedule_path[i];
+
+            i++;
+            j++;
+        }
+
+        route[j] = '\0';
+
+        if (schedule_path[i] != '_' ||
+            schedule_path[i + 1] == '\0') {
+            continue;
+        }
+
+        char direction = schedule_path[i + 1];
+
+       FILE *sched_file = fopen(schedule_path, "r");
+
+        if (sched_file == NULL) {
+            continue;
+        }
+
+        char file_header[256];
+        int num_stops = 0;
+
+        if (fgets(file_header, sizeof(file_header), sched_file) != NULL) {
+
+            /* 找到逗号 */
+            i = 0;
+
+            while (file_header[i] != ',' &&
+                   file_header[i] != '\0') {
+
+                i++;
+            }
+
+            /* 逗号后面的内容包含 stop 数量 */
+            if (file_header[i] == ',') {
+                num_stops = atoi(file_header + i + 1);
+            }
+
+            printf(
+                "schedule #%d is route %s it has %d stops and is in the %c direction\n",
+                index, route, num_stops, direction
+            );
         }
 
         fclose(sched_file);
+
         index++;
     }
 
     fclose(list_file);
+
     return 0;
 }
