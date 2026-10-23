@@ -22,7 +22,23 @@ typedef struct {
     Stop stops[MAX_STOPS];
 } Schedule;
 
+typedef struct {
+    char date[20];
+    char time[20];
+    char type;
+    int stop_id;
+} Tap;
 
+typedef struct {
+    int entry_stop;
+    int exit_stop;
+
+    char entry_date[20];
+    char entry_time[20];
+
+    char exit_date[20];
+    char exit_time[20];
+} Journey;
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
@@ -165,20 +181,138 @@ if (tap_file == NULL) {
 }
 
 char tap_line[256];
+int num_taps;
 
-while (fgets(tap_line, sizeof(tap_line), tap_file) != NULL) {
-    printf("%s", tap_line);
+// 读取第一行：Tap 记录总数
+fgets(tap_line, sizeof(tap_line), tap_file);
+num_taps = atoi(tap_line);
+
+// 创建数组，保存所有 Tap
+Tap taps[num_taps];
+
+// 按文件中的顺序读取所有 Tap
+for (int i = 0; i < num_taps; i++) {
+
+if (fgets(tap_line, sizeof(tap_line), tap_file) == NULL) {
+    printf("Invalid tap record\n");
+    fclose(tap_file);
+    return 1;
+}
+
+    taps[i].stop_id = -1;
+
+    int fields_read = sscanf(
+        tap_line,
+        "%19[^,],%19[^,],%c,%d",
+        taps[i].date,
+        taps[i].time,
+        &taps[i].type,
+        &taps[i].stop_id
+    );
+    if (fields_read < 3) {
+
+    printf("Invalid tap record\n");
+
+}
+else if (taps[i].type != 'E' &&
+         taps[i].type != 'X' &&
+         taps[i].type != 'M') {
+
+    printf("Invalid tap record\n");
+
+}
+else if ((taps[i].type == 'E' || taps[i].type == 'X')
+         && fields_read != 4) {
+
+    printf("Invalid tap record\n");
+}
 }
 
 fclose(tap_file);
-printf("Stored %d schedules.\n", schedule_count);
+Journey journeys[num_taps];
+int journey_count = 0;
+int entry_index = -1;
 
-printf("First route: %s\n", schedules[0].route_id);
+for (int i = num_taps - 1; i >= 0; i--) {
 
-printf("First stop ID: %d\n",
-       schedules[0].stops[0].stop_id);
+    if (taps[i].type == 'E') {
 
-printf("First stop name: %s\n",
-       schedules[0].stops[0].stop_name);
+        entry_index = i;
+
+        printf("Found Entry at stop %d\n",
+               taps[i].stop_id);
+    }
+
+    else if (taps[i].type == 'X' && entry_index != -1) {
+        journeys[journey_count].entry_stop =
+    taps[entry_index].stop_id;
+
+        journeys[journey_count].exit_stop =
+            taps[i].stop_id;
+            strcpy(journeys[journey_count].entry_date,
+       taps[entry_index].date);
+
+            strcpy(journeys[journey_count].entry_time,
+                taps[entry_index].time);
+
+            strcpy(journeys[journey_count].exit_date,
+                taps[i].date);
+
+            strcpy(journeys[journey_count].exit_time,
+                taps[i].time);
+
+        journey_count++;
+
+        printf("Journey: %d -> %d\n",
+               taps[entry_index].stop_id,
+               taps[i].stop_id);
+               int entry_stop = taps[entry_index].stop_id;
+                int exit_stop = taps[i].stop_id;
+                int candidate_count = 0;//这个变量专门统计有多少条路线满足要求。
+                int candidates[MAX_SCHEDULES];
+                for (int s = 0; s < schedule_count; s++) {
+
+            int entry_pos = -1;
+            int exit_pos = -1;
+
+                    for (int k = 0; k < schedules[s].num_stops; k++) {
+
+                        if (schedules[s].stops[k].stop_id == entry_stop) {
+                            entry_pos = k;
+                        }
+
+                        if (schedules[s].stops[k].stop_id == exit_stop) {
+                            exit_pos = k;
+                        }
+                    }
+
+                    if (entry_pos != -1 &&
+                        exit_pos != -1 &&
+                        entry_pos < exit_pos) {
+                            candidates[candidate_count] = s;
+                            candidate_count++;
+                        printf("Possible route: %s %c\n",
+                            schedules[s].route_id,
+                            schedules[s].direction);
+                    }
+                }
+                if (candidate_count == 0) {
+                        printf("No matching route found.\n");
+                    }
+                    else if (candidate_count == 1) {
+                        int selected = candidates[0];
+
+                        printf("Unique route: %s %c\n",
+                            schedules[selected].route_id,
+                            schedules[selected].direction);
+                    }
+                    else {
+                        printf("Ambiguous trip: %d possible routes.\n",
+                            candidate_count);
+                    }
+                        entry_index = -1;
+                    }
+                }
+
     return 0;
 }
