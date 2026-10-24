@@ -38,6 +38,9 @@ typedef struct {
 
     char exit_date[20];
     char exit_time[20];
+
+    char route_id[32];
+    char direction;
 } Journey;
 
 int main(int argc, char *argv[]) {
@@ -260,7 +263,8 @@ for (int i = num_taps - 1; i >= 0; i--) {
 
             strcpy(journeys[journey_count].exit_time,
                 taps[i].time);
-
+                journeys[journey_count].route_id[0] = '\0';
+            journeys[journey_count].direction = '\0';
         journey_count++;
 
         printf("Journey: %d -> %d\n",
@@ -291,7 +295,8 @@ for (int i = num_taps - 1; i >= 0; i--) {
                         entry_pos < exit_pos) {
                             candidates[candidate_count] = s;
                             candidate_count++;
-                        printf("Possible route: %s %c\n",
+                        printf("Possible route #%d: %s %c\n",
+                            candidate_count,
                             schedules[s].route_id,
                             schedules[s].direction);
                     }
@@ -300,19 +305,87 @@ for (int i = num_taps - 1; i >= 0; i--) {
                         printf("No matching route found.\n");
                     }
                     else if (candidate_count == 1) {
-                        int selected = candidates[0];
 
-                        printf("Unique route: %s %c\n",
-                            schedules[selected].route_id,
-                            schedules[selected].direction);
-                    }
-                    else {
-                        printf("Ambiguous trip: %d possible routes.\n",
-                            candidate_count);
-                    }
-                        entry_index = -1;
-                    }
+                    int selected = candidates[0];
+
+                    strcpy(
+                        journeys[journey_count - 1].route_id,
+                        schedules[selected].route_id
+                    );
+
+                    journeys[journey_count - 1].direction =
+                        schedules[selected].direction;
+
+                    printf("Unique route: %s %c\n",
+                        schedules[selected].route_id,
+                        schedules[selected].direction);
+
+                    //debug codes
+                    printf("DEBUG: Journey #%d matched Route %s %c\n",
+                        journey_count,
+                        journeys[journey_count - 1].route_id,
+                        journeys[journey_count - 1].direction);
                 }
+                    else {
 
-    return 0;
-}
+    int choice = 0;
+    char input[128];
+
+    printf("Ambiguous trip: %d possible routes.\n",
+           candidate_count);
+
+    while (1) {
+
+        printf("Select a route (1-%d): ", candidate_count);
+        fflush(stdout);
+
+        // 读取用户输入的一整行
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf("Input ended.\n");
+            return 1;
+        }
+
+        int extra;
+        char tail;
+
+        // 尝试读取一个整数，并检查是否有额外内容
+        extra = sscanf(input, " %d %c", &choice, &tail);
+
+        if (extra != 1) {
+            printf("Invalid selection\n");
+            continue;
+        }
+
+        if (choice < 1 || choice > candidate_count) {
+            printf("Invalid selection\n");
+            continue;
+        }
+
+        break;
+    }
+
+    int selected = candidates[choice - 1];
+
+    strcpy(
+        journeys[journey_count - 1].route_id,
+        schedules[selected].route_id
+    );
+
+    journeys[journey_count - 1].direction =
+        schedules[selected].direction;
+
+        printf("Selected route: %s %c\n",
+           journeys[journey_count - 1].route_id,
+           journeys[journey_count - 1].direction);
+
+    } // 结束 Ambiguous Trip 的 else
+
+    entry_index = -1;
+
+    } // 结束处理 X 的 else if
+
+} // 结束遍历 Tap 的 for
+
+return 0;
+
+} // 结束 main
